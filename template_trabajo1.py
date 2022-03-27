@@ -87,7 +87,9 @@ def gradient_descent(w_ini, lr, grad_fun, fun, epsilon = None, max_iters = 50):
   
     w = w_ini
     ws = np.array(w)
-    print(ws)
+    
+    y = np.array([])
+
     # print ("w inicial: ", w)
 
     iteraciones = 0
@@ -97,11 +99,12 @@ def gradient_descent(w_ini, lr, grad_fun, fun, epsilon = None, max_iters = 50):
 
       w = w - lr * grad_fun(w[0], w[1])
       
-      ws = np.append(ws, w, axis=0
+      ws = np.append(ws, w, axis=0)
       # print ("w modificado:", w)
       iteraciones = iteraciones + 1
 
       evaluacion = fun(w[0], w[1])
+      y = np.append(y, evaluacion)
 
       # print("Evaluacion a ese valor de w: ", evaluacion)
 
@@ -113,26 +116,38 @@ def gradient_descent(w_ini, lr, grad_fun, fun, epsilon = None, max_iters = 50):
         stop = False
         
 
-    print("Paro porque ", evaluacion, "es mayor a ", epsilon, "a la iteración", iteraciones)
+    print("Paro porque ", evaluacion, "es mayor a ", epsilon, "a la iteración", iteraciones, "y se alcanza en el punto",w )
 
-
-    print (w)
-    print (ws[1])
+    ws = np.reshape(ws, (int(len(ws)/2),2))
     
-    return ws, w
+    return ws, w, iteraciones, y
+
+# Ver que olos valores disminuyen
 
 
     
 #%%
 
-eta = 0.1 
+eta = 0.1
 maxIter = 10000000000
 error2get = 1e-8
 w_ini = np.array([0.5,-0.5])
 
-ws, w = gradient_descent(w_ini, eta, gradE, E, error2get, maxIter)
+ws, w, iteraciones, y = gradient_descent(w_ini, eta, gradE, E, error2get, maxIter)
 
-display_figure(2, E, ws, 'plasma','Ejercicio 1.2. Función sobre la que se calcula el descenso de gradiente')
+x = np.linspace ( start = 0.    # lower limit
+                , stop = iteraciones      # upper limit
+                , num = iteraciones      # generate 51 points between 0 and 3
+                )
+
+plt.plot(x, y, ':r')
+plt.title("Valor de la función E conforme avanza el número de iteraciones")
+plt.xlabel("Iteraciones")
+plt.ylabel("E(u,v)")
+plt.show()
+
+
+display_figure(3, E, ws, 'plasma','Ejercicio 1.2. Función sobre la que se calcula el descenso de gradiente')
 
 #%%
 
