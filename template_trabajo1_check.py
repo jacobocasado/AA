@@ -344,7 +344,7 @@ print ('Bondad antes de ejecutar :\n')
 print ("Ein: ", Err(x,y,w))
 # print ("Ein v2: ", Err2(x,y,w))
 print ("Eout: ", Err(x_test, y_test, w))
-print ("Gradiente: ", grad_Err(x_test, y_test, w))
+print ("Gradiente: ", grad_Err(x, y, w))
 
 print ('Bondad después de ejecutar :\n')
 sgd(32,x,y,x_test, y_test, w,0.01, 1e-8, 1, 200)
