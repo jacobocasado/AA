@@ -209,13 +209,6 @@ plt.show()
 
 display_figure(3, f, ws, 'hsv','Ejercicio 1.3. Función sobre la que se calcula el descenso de gradiente')
 
-
-
-
-
-
-
-
 #%%
 ###############################################################################
 ###############################################################################
@@ -289,8 +282,8 @@ def grad_Err(x,y,w):
 
 def get_batches(x, y, i, batch_size):
     
-    x_batch = x[i*batch_size:i*batch_size+batch_size]
-    y_batch = y[i*batch_size:i*batch_size+batch_size]
+    x_batch = x[i:i+batch_size]
+    y_batch = y[i:i+batch_size]
     
     return x_batch, y_batch
     
@@ -308,9 +301,9 @@ def sgd(batch_size, x, y, x_test, y_test, w, lr, maxErr, seed, maxIters):
         # print(iters)
         x, y = shuffle(x, y, random_state=seed)
         
-        for i in range(iteraciones_batch):
+        for i in range(0, len(x), batch_size):
             
-            x_batch_i, y_batch_i = get_batches(x,y,i,batch_size)
+            x_batch_i, y_batch_i = get_batches(x,y,i, batch_size)
             
             w = w - lr * grad_Err(x_batch_i, y_batch_i, w)
             
@@ -323,9 +316,27 @@ def sgd(batch_size, x, y, x_test, y_test, w, lr, maxErr, seed, maxIters):
     return w
 
 # Pseudoinversa	
-def pseudoinverse():
-    #
+def pseudoinverse(X,y):
+    
+    U,D,V_traspose = np.linalg.svd(X, full_matrices=False)
+    D = np.diag(D)
+    V = np.transpose(V_traspose)
+    
+    A = np.dot(V,np.linalg.inv(D))
+    A = np.dot(A, np.transpose(U))
+    
+    w = np.dot(A, y)
+    
     return w
+
+def hiperplano(w, x):
+    # A es w2, B es w1, C es w0
+    
+    A = w[2]
+    B = w[1]
+    C = w[0]
+    
+    return ((-1*B*x)/A - C/A)
 
 #%%
 
@@ -335,8 +346,9 @@ x, y = readData('datos/X_train.npy' , 'datos/y_train.npy' )
 # Lectura de los datos para el test
 x_test, y_test = readData('datos/X_test.npy', 'datos/y_test.npy')
 
-w = np.array([1.,1.,1.])
+#%%
 
+w = np.array([0.,0.,0.])
 
 #print ('Bondad del resultado para grad. descendente estocastico:\n')
 print ('Bondad antes de ejecutar :\n')
@@ -347,7 +359,57 @@ print ("Eout: ", Err(x_test, y_test, w))
 print ("Gradiente: ", grad_Err(x, y, w))
 
 print ('Bondad después de ejecutar :\n')
-sgd(32,x,y,x_test, y_test, w,0.01, 1e-8, 1, 200)
+w = sgd(32,x,y,x_test, y_test, w,0.01, 1e-8, 1, 200)
+
+
+data_1 = np.array([x_i for x_i, y_i in zip(x,y) if y_i == -1])
+data_5 = np.array([x_i for x_i, y_i in zip(x,y) if y_i == 1])
+
+x1 = hiperplano(w, 0.)
+x2 = hiperplano(w, 1.)
+
+recta = ([x1, x2])
+
+plt.scatter(data_1[:,1], data_1[:,2], c='blue')
+plt.scatter(data_5[:,1], data_5[:,2], c='red')
+
+plt.plot(recta)
+
+plt.xlabel("Intensidad media")
+
+plt.xlabel("Simetría")
+
+plt.show()
+
+
+#%%
+
+w = pseudoinverse(x,y)
+print(w)
+
+data_1 = np.array([x_i for x_i, y_i in zip(x,y) if y_i == -1])
+data_5 = np.array([x_i for x_i, y_i in zip(x,y) if y_i == 1])
+
+x1 = hiperplano(w, 0.)
+x2 = hiperplano(w, 1.)
+
+recta = ([x1, x2])
+
+plt.scatter(data_1[:,1], data_1[:,2], c='blue')
+plt.scatter(data_5[:,1], data_5[:,2], c='red')
+
+plt.plot(recta)
+
+plt.xlabel("Intensidad media")
+
+plt.xlabel("Simetría")
+
+plt.show()
+
+print ("Ein: ", Err(x,y,w))
+# print ("Ein v2: ", Err2(x,y,w))
+print ("Eout: ", Err(x_test, y_test, w))
+#%%
 
 #Seguir haciendo el ejercicio...
 
