@@ -171,15 +171,47 @@ plt.scatter(data_positive[:,0], data_positive[:,1], c='blue', label = 'Clase 1',
 
 recta_x = np.linspace(-50,50,100)
 recta_y = a*recta_x+b
-plt.plot(recta_x, recta_y, '-k', label='y=2x+1')
+formatted_a = '{0:.2f}'.format(a)
+formatted_b = '{0:.2f}'.format(b)
+plt.plot(recta_x, recta_y, '-k', label='f(x,y) = y - ax - b')
 
 plt.xlim(intervalo)
 plt.ylim(intervalo)
-plt.title('50 puntos generados aleatoriamente entre los ejes del cuadrado [-1, 1]')
+plt.title('100 puntos etiquetados por la recta f(x,y) = y - ax - b \n a = ' + str(formatted_a) + '; b = ' + str(formatted_b))
 plt.xlabel('Eje X')
 plt.ylabel('Eje Y')
 plt.legend(loc = 1)
 plt.show()
+
+#%%
+
+apply_noise(y, 0.1)
+#print("Y: \n", y)
+#print(np.shape(y))
+
+# Graficamos los datos con sus etiquetas, incluyendo en la leyenda
+# de qué clase son.
+data_negative = np.array([x_i for x_i, y_i in zip(x,y) if y_i == -1])
+data_positive = np.array([x_i for x_i, y_i in zip(x,y) if y_i == 1])
+plt.scatter(data_negative[:,0], data_negative[:,1], c='red', label = 'Clase -1', s = 5)
+plt.scatter(data_positive[:,0], data_positive[:,1], c='blue', label = 'Clase 1',  s = 5)
+
+recta_x = np.linspace(-50,50,100)
+recta_y = a*recta_x+b
+formatted_a = '{0:.2f}'.format(a)
+formatted_b = '{0:.2f}'.format(b)
+plt.plot(recta_x, recta_y, '-k', label='f(x,y) = y - ax - b')
+
+plt.xlim(intervalo)
+plt.ylim(intervalo)
+plt.title('100 puntos etiquetados por la recta f(x,y) = y - ax - b \n a = ' + str(formatted_a) + '; b = ' + str(formatted_b))
+plt.xlabel('Eje X')
+plt.ylabel('Eje Y')
+plt.legend(loc = 1)
+plt.show()
+
+#%%
+import inspect
 
 
 def f1(X):
@@ -207,20 +239,21 @@ def evaluar_f(f, X,y):
     #print(np.sum(errors))
     # Hallamos la media de errores.
     Ein = np.mean(errors)
-    print("Ein: ", Ein)
+    print("Ein obtenido: ", Ein)
 
+print("f1:")
 evaluar_f(f1, x, y)
+print("f2:")
 evaluar_f(f2, x, y)
+print("f3:")
 evaluar_f(f3, x, y)
+print("f4:")
 evaluar_f(f4, x, y)
 
-plot_datos_cuad(x, y, f1, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
-plot_datos_cuad(x, y, f2, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
-plot_datos_cuad(x, y, f3, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
-plot_datos_cuad(x, y, f4, title='Point cloud plot', xaxis='x axis', yaxis='y axis')
-
-
-
+plot_datos_cuad(x, y, f1, title='Clasificación de los puntos generados con f \n con la función f1', xaxis='Eje X', yaxis='Eje Y')
+plot_datos_cuad(x, y, f2, title='Clasificación de los puntos generados con f \n con la función f2', xaxis='Eje X', yaxis='Eje Y')
+plot_datos_cuad(x, y, f3, title='Clasificación de los puntos generados con f \n con la función f3', xaxis='Eje X', yaxis='Eje Y')
+plot_datos_cuad(x, y, f4, title='Clasificación de los puntos generados con f \n con la función f4', xaxis='Eje X', yaxis='Eje Y')
 
 
 #%%
