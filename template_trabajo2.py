@@ -40,15 +40,17 @@ x1 = x[:,0]
 x2 = x[:,1]
 
 
-
 # Ploteamos los datos en el cuadrado
 plt.scatter(x1, x2, c = 'k', s=4)
 plt.title(str(50) + ' puntos generados aleatoriamente entre los ejes del cuadrado [-50, 50] \n usando la función simula_unif')
 
 # Damos título a los ejes del gráfico y mostramos la leyenda
-plt.xlabel("Rango del cuadrado")
-plt.ylabel("Valor de los puntos")
+plt.xlabel("Valor en x de los puntos")
+plt.ylabel("Valor en y de los puntos")
 plt.show()
+
+
+#%%
 
 
 x = simula_gauss(50, 2, [5,7])
@@ -59,8 +61,8 @@ plt.scatter(x1, x2, c = 'k', s=4)
 plt.title(str(50) + ' puntos generados aleatoriamente entre los ejes del cuadrado [5, 7] \n usando la función simula_gauss')
 
 # Damos título a los ejes del gráfico y mostramos la leyenda
-plt.xlabel("Rango del cuadrado")
-plt.ylabel("Valor de los puntos")
+plt.xlabel("Valor en x de los puntos")
+plt.ylabel("Valor en y de los puntos")
 plt.show()
 
 
@@ -360,7 +362,7 @@ def plot_accuracy(evol, x, y):
     # Mostramos una gráfica con la evolución del accuracy
     acc_evol = []
     for w_ in evol:
-        acc_evol.append(predict_points(w_, add_bias(x), y))
+        acc_evol.append(get_accuracy(w_, add_bias(x), y))
         
     plt.figure(figsize = (8, 6))
     plt.xlabel("Iteraciones")
@@ -368,13 +370,29 @@ def plot_accuracy(evol, x, y):
     plt.title("Evolución del accuracy en la clasificación durante el algoritmo.")
     plt.plot(range(len(evol)), acc_evol)
     plt.show()
+    
+def plot_ein(evol, x, y):
+    # Mostramos una gráfica con la evolución del accuracy
+    acc_evol = []
+    for w_ in evol:
+        acc_evol.append(get_ein(w_, add_bias(x), y))
+        
+    plt.figure(figsize = (8, 6))
+    plt.xlabel("Iteraciones")
+    plt.ylabel("Accuracy")
+    plt.title("Evolución del Ein (error de clasificación, tanto por uno) \n en la clasificación durante el algoritmo.")
+    plt.plot(range(len(evol)), acc_evol)
+    plt.show()
 
 #%%
 
 w, it, evol = ajusta_PLA(x, y, 50, [0,0,0])
 plot_accuracy(evol, x, y)
+plot_ein(evol, x, y)
 w, evol = pla_pocket(x, y, 50, [0,0,0])
 plot_accuracy(evol, x, y)
+plot_ein(evol, x, y)
+
 
 #predict_points(w, add_bias(x), y)
 
