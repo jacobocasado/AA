@@ -64,7 +64,6 @@ plt.xlabel("Valor en x de los puntos")
 plt.ylabel("Valor en y de los puntos")
 plt.show()
 
-wait()
 
 #%%
 
@@ -81,8 +80,6 @@ plt.xlabel("Valor en x de los puntos")
 plt.ylabel("Valor en y de los puntos")
 plt.show()
 
-
-wait()
 
 #%%
 
@@ -534,7 +531,7 @@ y = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
 
 # Primero, lo ejecutamos con el [0,0,0]
 print (" \n Ejecutando con w_ini = [0,0,0]. Resultados:")
-w, it, evol, acc, ein = ajusta_PLA(add_bias(x), y, 100, [0.,0.,0.])
+w, it, evol, acc, ein = ajusta_PLA(add_bias(x), y, 1000, [0.,0.,0.])
 
 # Dibujamos la recta original, la que etiqueta esos puntos.
 recta_x = np.linspace(intervalo[0], intervalo[1],100)
@@ -557,7 +554,7 @@ error = []
 for i in range(0,10):
     w_random =  np.random.rand(3)
     print("Ejecutando PLA con w inicial: ", w_random)
-    w, it, evol, acc, ein  = ajusta_PLA(add_bias(x), y, 100, w_random)
+    w, it, evol, acc, ein  = ajusta_PLA(add_bias(x), y, 1000, w_random)
     iterations.append(it)
     error.append(ein)
     
@@ -573,7 +570,7 @@ y = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
 apply_noise(y, 0.1)
 # Primero, lo ejecutamos con el [0,0,0]
 print (" \n Ejecutando con w_ini = [0,0,0]. Resultados:")
-w, it, evol, acc, ein = ajusta_PLA(add_bias(x), y, 100, [0.,0.,0.])
+w, it, evol, acc, ein = ajusta_PLA(add_bias(x), y, 1000, [0.,0.,0.])
 
 recta_x = np.linspace(intervalo[0], intervalo[1],100)
 recta_y = a*recta_x+b
@@ -856,7 +853,7 @@ def readData(file_x, file_y, digits, labels):
 	
 	return x, y
 
-def plot_ajuste(w):
+def plot_ajuste(w, label):
     
     
     #mostramos los datos
@@ -879,7 +876,7 @@ def plot_ajuste(w):
     ax2.plot(np.squeeze(x_test[np.where(y_test == -1),1]), np.squeeze(x_test[np.where(y_test == -1),2]), 'o', color='red', label='4')
     ax2.plot(np.squeeze(x_test[np.where(y_test == 1),1]), np.squeeze(x_test[np.where(y_test == 1),2]), 'o', color='blue', label='8')
     ax2.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TEST)')
-    ax2.plot(intervalo, recta, '-k', label='Pseudoinversa')
+    ax2.plot(intervalo, recta, '-k', label=label)
 
     ax2.set_xlim((0, 0.6))
     ax2.set_ylim((-8, 0))
@@ -891,8 +888,10 @@ def plot_ajuste(w):
 #%%
 # Lectura de los datos de entrenamiento
 x, y = readData('datos/X_train.npy', 'datos/y_train.npy', [4,8], [-1,1])
+print(np.shape(x))
 # Lectura de los datos para el test
 x_test, y_test = readData('datos/X_test.npy', 'datos/y_test.npy', [4,8], [-1,1])
+print(np.shape(x_test))
 
 #mostramos los datos
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 8))
@@ -903,12 +902,12 @@ for ax in fig.get_axes():
 ax1.plot(np.squeeze(x[np.where(y == -1),1]), np.squeeze(x[np.where(y == -1),2]), 'o', color='red', label='4')
 ax1.plot(np.squeeze(x[np.where(y == 1),1]), np.squeeze(x[np.where(y == 1),2]), 'o', color='blue', label='8')
 ax1.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (ENTRENAMIENTO)')
-ax1.set_xlim((0, 1))
+ax1.set_xlim((0,0.6))
 
 ax2.plot(np.squeeze(x_test[np.where(y_test == -1),1]), np.squeeze(x_test[np.where(y_test == -1),2]), 'o', color='red', label='4')
 ax2.plot(np.squeeze(x_test[np.where(y_test == 1),1]), np.squeeze(x_test[np.where(y_test == 1),2]), 'o', color='blue', label='8')
 ax2.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TEST)')
-ax2.set_xlim((0, 1))
+ax2.set_xlim((0, 0.6))
 plt.legend()
 plt.show()
 
@@ -918,11 +917,14 @@ plt.show()
 
 w = pseudoinverse(x,y)
 
-plot_ajuste(w)
+plot_ajuste(w, 'Pseudoinversa')
 
-print("Ein: (error cuadrático medio): ", Ecm(x,y,w))
+Ein_pseudo = Ecm(x,y,w)
+Etest_pseudo = Ecm(x_test,y_test,w)
+
+print("Ein: (error cuadrático medio): ", Ein_pseudo)
 print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
-print("Ein: (error cuadrático medio): ", Ecm(x_test,y_test,w))
+print("Etest: (error cuadrático medio): ", Ecm(x_test,y_test,w))
 print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
 
 #%%
@@ -930,10 +932,13 @@ print("Error de clasificación (tanto por uno) en TEST: ", get_classification_er
 # PLA BÁSICO
 w, it, evol, acc, ein = ajusta_PLA(x, y, 100, [0.,0.,0.])
 
-plot_ajuste(w)
+plot_ajuste(w, 'PLA Algorithm')
 
-print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
-print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
+Ein_pla = get_classification_error(w,x,y)
+Etest_pla = get_classification_error(w,x_test,y_test)
+
+print("Error de clasificación (tanto por uno) en TRAIN: ", Ein_pla)
+print("Error de clasificación (tanto por uno) en TEST: ", Etest_pla)
 
 #%%
 #POCKET ALGORITHM
@@ -941,28 +946,84 @@ print("Error de clasificación (tanto por uno) en TEST: ", get_classification_er
 # PLA BÁSICO
 w, evol, ein = pla_pocket(x, y, 10, [0.,0.,0.])
 
-plot_ajuste(w)
+plot_ajuste(w, 'PLA Pocket')
 
-print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
-print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
+Ein_pocket = get_classification_error(w,x,y)
+Etest_pocket = get_classification_error(w,x_test,y_test)
+
+print("Error de clasificación (tanto por uno) en TRAIN: ", Ein_pocket)
+print("Error de clasificación (tanto por uno) en TEST: ", Etest_pocket)
 
 #%%
 
 w, it, Ein, class_error = logistic_sgd(x, y, 1, 0.01, 32)
 
-plot_ajuste(w)
+plot_ajuste(w, 'Regresión Logística')
 
-print("Ein: (error cross-entropy): ", err(x,y,w))
+Ein_RL = err(x,y,w)
+Etest_RL =  err(x_test,y_test,w)
+
+print("Ein: (error cross-entropy): ",Ein_RL)
 print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
-print("Etest: (error cross-entropy): ", err(x_test,y_test,w))
+print("Etest: (error cross-entropy): ", Etest_RL)
 print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
 
 #%%
-  
 
+# Probamos a generar w con pseudoinversa y se lo pasamos a PLA Pocket.
 
+w_pseudo = pseudoinverse(x,y)
 
+w, evol, ein = pla_pocket(x, y, 10, w_pseudo)
+print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
+print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
 
+# PLA BÁSICO
+w, it, evol, acc, ein = ajusta_PLA(x, y, 100, w_pseudo)
+print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
+print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
+
+# Vemos que el error es el mismo.
+
+#%%
 #COTA SOBRE EL ERROR
 
-#CODIGO DEL ESTUDIANTE
+def err_bound_hoeffding(err, n, m, delta):
+    """Cota de Hoeffding para el error de generalización.
+         - err: error a partir del cual generalizamos.
+         - n: tamaño del conjunto usado para calcular 'err'.
+         - m: tamaño de la clase de hipótesis usada para calcular 'err'.
+         - delta: tolerancia."""
+
+    return err + np.sqrt((1 / (2 * n)) * np.log((2 * m) / delta))
+
+def err_bound_vc(err, n, vc, delta):
+    """Cota para el error de generalización basada en la dimensión VC.
+         - err: error a partir del cual generalizamos.
+         - n: tamaño del conjunto usado para calcular 'err'.
+         - vc: dimensión VC del clasificador usado para calcular 'err'.
+         - delta: tolerancia."""
+
+    return err + np.sqrt((8 / n) * np.log(4 * ((2 * n) ** vc + 1) / delta))
+
+#%%
+
+
+delta = 0.05
+
+print ("PSEUDOINVERSA: Eout como máximo vale, con una probabilidad de ", str(1 - delta), ":")
+print("Cota usando Ein (dimensión VC): ", err_bound_vc(Ein_pseudo, np.shape(x)[0], 3, delta))
+print("Cota usando Etest (Hoeffding): ", err_bound_hoeffding(Etest_pseudo, np.shape(x_test)[0], 1, delta))
+
+print ("PLA: Eout como máximo vale, con una probabilidad de ", str(1 - delta), ":")
+print("Cota usando Ein (dimensión VC): Eout como máximo vale", err_bound_vc(Ein_pla, np.shape(x)[0], 3, delta))
+print("Cota usando Etest (Hoeffding): ", err_bound_hoeffding(Etest_pla, np.shape(x_test)[0], 1, delta))
+
+print ("PLA-Pocket: Eout como máximo vale, con una probabilidad de ", str(1 - delta), ":")
+print("Cota usando Ein (dimensión VC): Eout como máximo vale", err_bound_vc(Ein_pocket, np.shape(x)[0], 3, delta))
+print("Cota usando Etest (Hoeffding): ", err_bound_hoeffding(Etest_pocket, np.shape(x_test)[0], 1, delta))
+
+print ("RL: Eout como máximo vale, con una probabilidad de ", str(1 - delta), ":")
+print("Cota usando Ein (dimensión VC): Eout como máximo vale", err_bound_vc(Ein_RL, np.shape(x)[0], 3, delta))
+print("Cota usando Etest (Hoeffding): ", err_bound_hoeffding(Etest_RL, np.shape(x_test)[0], 1, delta))
+
