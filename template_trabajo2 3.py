@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 TRABAJO 2
-Nombre Estudiante: 
+Nombre Estudiante:  Jacobo Casado de Gracia.
+Correo electrónico en caso de dudas: casadojacobo@gmail.com / jacobocasado@correo.ugr.es
+
 """
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
-
-
 
 # Fijamos la semilla
 seed = 1
@@ -48,7 +48,6 @@ def hiperplano(w, x):
 
 
 #%%
-
 
 # EJERCICIO 1.1: Dibujar una gráfica con la nube de puntos de salida correspondiente
 x = simula_unif(50, 2, [-50,50])
@@ -859,32 +858,34 @@ def readData(file_x, file_y, digits, labels):
 
 def plot_ajuste(w):
     
-    #mostramos los datos
-    fig, ax = plt.subplots()
-    ax.plot(np.squeeze(x[np.where(y == -1),1]), np.squeeze(x[np.where(y == -1),2]), 'o', color='red', label='4')
-    ax.plot(np.squeeze(x[np.where(y == 1),1]), np.squeeze(x[np.where(y == 1),2]), 'o', color='blue', label='8')
-    ax.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TRAINING) \n. Error de clasificación (tanto por uno): ' + str(get_classification_error(w, x, y)))
-    x1_recta = hiperplano(w, intervalo[0])
-    x2_recta = hiperplano(w, intervalo[1])
-    recta = ([x1_recta, x2_recta])
-    plt.plot(intervalo, recta, '-k', label='Pseudoinversa')
-    ax.set_ylim((-8, 0))
-    ax.set_xlim((0, 0.6))
-    plt.legend()
-    plt.show()
     
-    fig, ax = plt.subplots()
-    ax.plot(np.squeeze(x_test[np.where(y_test == -1),1]), np.squeeze(x_test[np.where(y_test == -1),2]), 'o', color='red', label='4')
-    ax.plot(np.squeeze(x_test[np.where(y_test == 1),1]), np.squeeze(x_test[np.where(y_test == 1),2]), 'o', color='blue', label='8')
-    ax.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TEST) \n. Error de clasificación (tanto por uno): ' + str(get_classification_error(w, x_test, y_test)))
+    #mostramos los datos
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 8))
+    
     x1_recta = hiperplano(w, intervalo[0])
     x2_recta = hiperplano(w, intervalo[1])
     recta = ([x1_recta, x2_recta])
-    plt.plot(intervalo, recta, '-k', label='Pseudoinversa')
-    ax.set_ylim((-8, 0))
-    ax.set_xlim((0, 0.6))
+
+    for ax in fig.get_axes():
+        ax.label_outer()
+
+    ax1.plot(np.squeeze(x[np.where(y == -1),1]), np.squeeze(x[np.where(y == -1),2]), 'o', color='red', label='4')
+    ax1.plot(np.squeeze(x[np.where(y == 1),1]), np.squeeze(x[np.where(y == 1),2]), 'o', color='blue', label='8')
+    ax1.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (ENTRENAMIENTO)')
+    ax1.plot(intervalo, recta, '-k', label='Pseudoinversa')
+    ax1.set_xlim((0, 0.6))
+    ax1.set_ylim((-8, 0))
+
+    ax2.plot(np.squeeze(x_test[np.where(y_test == -1),1]), np.squeeze(x_test[np.where(y_test == -1),2]), 'o', color='red', label='4')
+    ax2.plot(np.squeeze(x_test[np.where(y_test == 1),1]), np.squeeze(x_test[np.where(y_test == 1),2]), 'o', color='blue', label='8')
+    ax2.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TEST)')
+    ax2.plot(intervalo, recta, '-k', label='Pseudoinversa')
+
+    ax2.set_xlim((0, 0.6))
+    ax2.set_ylim((-8, 0))
     plt.legend()
     plt.show()
+
     
     
 #%%
@@ -894,19 +895,20 @@ x, y = readData('datos/X_train.npy', 'datos/y_train.npy', [4,8], [-1,1])
 x_test, y_test = readData('datos/X_test.npy', 'datos/y_test.npy', [4,8], [-1,1])
 
 #mostramos los datos
-fig, ax = plt.subplots()
-ax.plot(np.squeeze(x[np.where(y == -1),1]), np.squeeze(x[np.where(y == -1),2]), 'o', color='red', label='4')
-ax.plot(np.squeeze(x[np.where(y == 1),1]), np.squeeze(x[np.where(y == 1),2]), 'o', color='blue', label='8')
-ax.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TRAINING)')
-ax.set_xlim((0, 1))
-plt.legend()
-plt.show()
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 8))
 
-fig, ax = plt.subplots()
-ax.plot(np.squeeze(x_test[np.where(y_test == -1),1]), np.squeeze(x_test[np.where(y_test == -1),2]), 'o', color='red', label='4')
-ax.plot(np.squeeze(x_test[np.where(y_test == 1),1]), np.squeeze(x_test[np.where(y_test == 1),2]), 'o', color='blue', label='8')
-ax.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TEST)')
-ax.set_xlim((0, 1))
+for ax in fig.get_axes():
+    ax.label_outer()
+
+ax1.plot(np.squeeze(x[np.where(y == -1),1]), np.squeeze(x[np.where(y == -1),2]), 'o', color='red', label='4')
+ax1.plot(np.squeeze(x[np.where(y == 1),1]), np.squeeze(x[np.where(y == 1),2]), 'o', color='blue', label='8')
+ax1.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (ENTRENAMIENTO)')
+ax1.set_xlim((0, 1))
+
+ax2.plot(np.squeeze(x_test[np.where(y_test == -1),1]), np.squeeze(x_test[np.where(y_test == -1),2]), 'o', color='red', label='4')
+ax2.plot(np.squeeze(x_test[np.where(y_test == 1),1]), np.squeeze(x_test[np.where(y_test == 1),2]), 'o', color='blue', label='8')
+ax2.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TEST)')
+ax2.set_xlim((0, 1))
 plt.legend()
 plt.show()
 
