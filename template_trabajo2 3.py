@@ -5,7 +5,6 @@ Nombre Estudiante:
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 from sklearn.utils import shuffle
 
 
@@ -13,6 +12,10 @@ from sklearn.utils import shuffle
 # Fijamos la semilla
 seed = 1
 np.random.seed(seed)
+
+def wait():
+     input("(Pulsa [Enter] para pasar al siguiente apartado...)\n")
+     plt.close()
 
 # Función que devuelve 1 si el elemento es positivo y -1 si es negativo
 def sign(x):
@@ -62,6 +65,7 @@ plt.xlabel("Valor en x de los puntos")
 plt.ylabel("Valor en y de los puntos")
 plt.show()
 
+wait()
 
 #%%
 
@@ -79,8 +83,7 @@ plt.ylabel("Valor en y de los puntos")
 plt.show()
 
 
-#input("\n--- Pulsar tecla para continuar ---\n")
-
+wait()
 
 #%%
 
@@ -115,16 +118,17 @@ def f(x, y, a, b):
 
 def apply_noise(y, percentage):
     
-    for label in [-1, 1]:
-        # Seleccionamos los índices de las clases positivas (resp. negativas)
-        idxs = np.where(y == label)[0]
+    # Seleccionamos los índices de las clases positivas (resp. negativas)
+    idxs_negative = np.where(y == -1)[0]
+    idxs_positive = np.where(y == 1)[0]
 
-        # Elegimos aleatoriamente una fracción 'p' de ellos
-        random_idxs = np.random.choice(idxs, int(percentage * len(idxs)), replace = False)
-
-        # Cambiamos el signo de los elegidos
-        y[random_idxs] = -y[random_idxs]
-        
+    # Elegimos aleatoriamente una fracción 'p' de ellos
+    random_idxs_negative = np.random.choice(idxs_negative, round(percentage * len(idxs_negative)), replace = False)
+    random_idxs_positive = np.random.choice(idxs_positive, round(percentage * len(idxs_positive)), replace = False)
+    # Cambiamos el signo de los elegidos
+    y[random_idxs_negative] = -y[random_idxs_negative]
+    y[random_idxs_positive] = -y[random_idxs_positive]
+    
         
 def plot_datos_cuad(X, y, fz, title='Point cloud plot', xaxis='x axis', yaxis='y axis'):
     #Preparar datos
@@ -223,7 +227,7 @@ plt.plot(recta_x, recta_y, '-k', label='f(x,y) = y - ax - b')
 
 plt.xlim(intervalo)
 plt.ylim(intervalo)
-plt.title('100 puntos etiquetados por la recta f(x,y) = y - ax - b \n a = ' + str(formatted_a) + '; b = ' + str(formatted_b))
+plt.title('100 puntos CON RUIDO etiquetados por la recta f(x,y) = y - ax - b \n a = ' + str(formatted_a) + '; b = ' + str(formatted_b))
 plt.xlabel('Eje X')
 plt.ylabel('Eje Y')
 plt.legend(loc = 1)
@@ -250,21 +254,9 @@ def etiquetar_puntos_f(f, x):
 def evaluar_f(f, x,y):
 
     y_hat = np.sign(f(x))
-    #print(y_hat)
-    #print(np.shape(y_hat))
-    #print(np.shape(y))
-    #errors = (y_hat - y)
+
     errors = (y_hat - y) != 0
-    # print(errors)
-    # errors = 0
-    # hits = 0
-    # for x, l in zip(y_hat, y):
-    #     # Si está mal clasificado, actualizamos los pesos
-    #     if sign(x) != l:
-    #         errors = errors + 1
-    #     else:
-    #         hits = hits + 1
-    # Hallamos la media de errores.
+
     Ein = np.mean(errors)
     print("Error de clasificación (Ein) obtenido: ", Ein)
     return (Ein)
@@ -397,7 +389,7 @@ def get_accuracy(w, x_bias, y):
     
     return accuracy
 
-def get_ein(w, x_bias, y):
+def get_classification_error(w, x_bias, y):
     
     errors = 0
     hits = 0
@@ -420,10 +412,8 @@ def get_ein(w, x_bias, y):
     return ein
 
 # EJERCICIO 2.1: ALGORITMO PERCEPTRON
-def ajusta_PLA(datos, label, max_iter, vini):
-    
-    datos_bias = add_bias(datos)
-    
+def ajusta_PLA(datos_bias, label, max_iter, vini):
+        
     w = vini.copy()  # No modificamos el parámetro w_ini
     evol = [vini]
     
@@ -433,7 +423,7 @@ def ajusta_PLA(datos, label, max_iter, vini):
         change = False
 
         # Recorremos todos los ejemplos
-        for x, l in zip(datos_bias, y):
+        for x, l in zip(datos_bias, label):
             # Si está mal clasificado, actualizamos los pesos
             if sign(x.dot(w)) != l:
                 w += l * x
@@ -446,11 +436,11 @@ def ajusta_PLA(datos, label, max_iter, vini):
         # Guardamos la evolución de w
         evol.append(w.copy())
         
-    print("-w final: ", w, "\n", "-Iteración final: ", it, "\n", "-Error de clasificación: ", get_ein(w, datos_bias, y))
+    print("-w final: ", w, "\n", "-Iteración final: ", it, "\n", "-Error de clasificación: ", get_classification_error(w, datos_bias, label))
 
-    return w, it, evol, get_accuracy(w, datos_bias, y), get_ein(w, datos_bias, y)
+    return w, it, evol, get_accuracy(w, datos_bias, y), get_classification_error(w, datos_bias, label)
 
-def pla_pocket(datos, label, max_iter, vini):
+def pla_pocket(datos_bias, label, max_iter, vini):
     
     """Ajusta los parámetros de un hiperplano para un problema de clasificación
        binaria usando el algoritmo PLA-Pocket.
@@ -459,10 +449,9 @@ def pla_pocket(datos, label, max_iter, vini):
          - max_it: número fijo de iteraciones.
          - w_ini: vector de pesos inicial."""
          
-    datos_bias = add_bias(datos)
     w = vini.copy()
     w_best = w.copy()
-    best_err = get_ein(w_best, datos_bias, label)
+    best_err = get_classification_error(w_best, datos_bias, label)
     evol = [vini]
 
     for _ in range(max_iter):
@@ -470,7 +459,7 @@ def pla_pocket(datos, label, max_iter, vini):
             if sign(x.dot(w)) != l:
                 w += l * x
 
-            curr_err = get_ein(w, datos_bias, label)
+            curr_err = get_classification_error(w, datos_bias, label)
         
             if curr_err < best_err:
                 best_err = curr_err
@@ -478,9 +467,9 @@ def pla_pocket(datos, label, max_iter, vini):
 
         evol.append(w_best.copy())
         
-    print("-w final: ", w_best, "\n", "-Iteración final: ", max_iter, "\n -Error de clasificación: ", get_ein(w, datos_bias, y))
+    print("-w final: ", w_best, "\n", "-Iteración final: ", max_iter, "\n -Error de clasificación: ", get_classification_error(w_best, datos_bias, label))
 
-    return w_best, evol, get_ein(w_best, datos_bias, y)
+    return w_best, evol, get_classification_error(w_best, datos_bias, label)
         
 
 def plot_accuracy(evol, x, y):
@@ -500,11 +489,11 @@ def plot_ein(evol, x, y):
     # Mostramos una gráfica con la evolución del accuracy
     acc_evol = []
     for w_ in evol:
-        acc_evol.append(get_ein(w_, add_bias(x), y))
+        acc_evol.append(get_classification_error(w_, add_bias(x), y))
         
     plt.figure(figsize = (8, 6))
     plt.xlabel("Iteraciones")
-    plt.ylabel("Accuracy")
+    plt.ylabel("Ein")
     plt.title("Evolución del Ein (error de clasificación, tanto por uno) \n en la clasificación durante el algoritmo.")
     plt.plot(range(len(evol)), acc_evol)
     plt.show()
@@ -532,8 +521,6 @@ def plot_recta(x,y,intervalo,w):
     plt.legend(loc = 1)
     plt.show()
     
-    
-    
 
 #%%
 
@@ -548,9 +535,17 @@ y = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
 
 # Primero, lo ejecutamos con el [0,0,0]
 print (" \n Ejecutando con w_ini = [0,0,0]. Resultados:")
-w, it, evol, acc, ein = ajusta_PLA(x, y, 1000, [0.,0.,0.])
+w, it, evol, acc, ein = ajusta_PLA(add_bias(x), y, 100, [0.,0.,0.])
+
+# Dibujamos la recta original, la que etiqueta esos puntos.
+recta_x = np.linspace(intervalo[0], intervalo[1],100)
+recta_y = a*recta_x+b
+plt.plot(recta_x, recta_y, '--b', label='Recta etiquetado')
+plt.legend(loc='upper right')
 
 plot_recta(x,y,intervalo,w)
+
+#%%
 plot_accuracy(evol, x, y)
 plot_ein(evol, x, y)
 
@@ -563,7 +558,7 @@ error = []
 for i in range(0,10):
     w_random =  np.random.rand(3)
     print("Ejecutando PLA con w inicial: ", w_random)
-    w, it, evol, acc, ein  = ajusta_PLA(x, y, 1000, w_random)
+    w, it, evol, acc, ein  = ajusta_PLA(add_bias(x), y, 100, w_random)
     iterations.append(it)
     error.append(ein)
     
@@ -579,11 +574,21 @@ y = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
 apply_noise(y, 0.1)
 # Primero, lo ejecutamos con el [0,0,0]
 print (" \n Ejecutando con w_ini = [0,0,0]. Resultados:")
-w, it, evol, acc, ein = ajusta_PLA(x, y, 1000, [0.,0.,0.])
+w, it, evol, acc, ein = ajusta_PLA(add_bias(x), y, 100, [0.,0.,0.])
+
+recta_x = np.linspace(intervalo[0], intervalo[1],100)
+recta_y = a*recta_x+b
+plt.plot(recta_x, recta_y, '--b', label='Recta etiquetado')
+plt.legend(loc='upper right')
 
 plot_recta(x,y,intervalo,w)
+
+#%%
+
 plot_accuracy(evol, x, y)
 plot_ein(evol, x, y)
+
+#%%
 
 # Luego lo ejecutamos con vectores de números aleatorios en [0,1] 10 veces
 # Y hacemos la media de las iteraciones.
@@ -594,11 +599,11 @@ error = []
 for i in range(0,10):
     w_random =  np.random.rand(3)
     print("Ejecutando PLA con w inicial: ", w_random)
-    w, it, evol, acc, ein  = ajusta_PLA(x, y, 1000, w_random)
+    w, it, evol, acc, ein  = ajusta_PLA(add_bias(x), y, 1000, w_random)
     iterations.append(it)
     error.append(ein)
 
-esqprint (" \n Fin de las 10 ejecuciones. Resultados:")
+print (" \n Fin de las 10 ejecuciones. Resultados:")
 print ("Iteración media después de las 10 ejecuciones: ", np.mean(iterations))
 print ("Error medio de clasificación después de las 10 ejecuciones: ", np.mean(ein))
 
@@ -608,7 +613,12 @@ print ("Error medio de clasificación después de las 10 ejecuciones: ", np.mean
 # Probamos a ajustar los datos con ruido con el PLA Pocket.
 
 # Probamos con el [0,0,0] para hacer las gráficas
-w, evol, ein = pla_pocket(x, y, 100, [0.,0.,0.])
+w, evol, ein = pla_pocket(add_bias(x), y, 100, [0.,0.,0.])
+recta_x = np.linspace(intervalo[0], intervalo[1],100)
+recta_y = a*recta_x+b
+plt.plot(recta_x, recta_y, '--b', label='Recta etiquetado')
+plt.legend(loc='upper right')
+plot_recta(x,y,intervalo,w)
 plot_accuracy(evol, x, y)
 plot_ein(evol, x, y)
 
@@ -618,7 +628,7 @@ error = []
 for i in range(0,10):
     w_random =  np.random.rand(3)
     print("Ejecutando PLA POCKET con w inicial: ", w_random)
-    w, evol, ein = pla_pocket(x, y, 100, [0.,0.,0.])
+    w, evol, ein = pla_pocket(add_bias(x), y, 100, [0.,0.,0.])
     error.append(ein)
     
 print ("Error medio de clasificación después de las 10 ejecuciones: ", np.mean(ein))
@@ -631,13 +641,14 @@ print ("Error medio de clasificación después de las 10 ejecuciones: ", np.mean
 
 # EJERCICIO 3: REGRESIÓN LOGÍSTICA CON STOCHASTIC GRADIENT DESCENT
 
-def err(X, y, w):
+def err(x, y, w):
     """Expresión del error cometido por un modelo de regresión logística.
          - X: matriz de características con primera componente 1.
          - y: vector de etiquetas.
          - w: vector de pesos."""
-
-    return np.mean(np.log(1 + np.exp(-y * X.dot(w))))
+    
+    w_t = np.transpose(w)
+    return np.mean(np.log(1 + np.exp(-y * x.dot(w_t))))
 
 def derr(x, y, w):
     """Expresión puntual del gradiente del error cometido por un modelo
@@ -645,8 +656,11 @@ def derr(x, y, w):
          - x: vector de características con primera componente 1.
          - y: vector de etiquetas.
          - w: vector de pesos."""
+         
+    w_t = np.transpose(w)
+    grad = np.array([ (y[i] * x[i]) / (1 + np.exp(y[i] * np.dot(w_t, x[i]))) for i in range (len(y))])
 
-    return -y * x / (1 + np.exp(y * x.dot(w)))
+    return -np.mean(grad, axis = (0))
 
 def get_batches(x, y, i, batch_size):
     
@@ -655,9 +669,7 @@ def get_batches(x, y, i, batch_size):
     
     return x_batch, y_batch
 
-
-
-def logistic_sgd(x, y, lr, eps, batch_size):
+def logistic_sgd(x, y, lr, eps, batch_size, verbose = 0):
     """Implementa el algoritmo de regresión logística con SGD. Devuelve el
        vector de pesos encontrado y las iteraciones realizadas.
          - X: matriz de datos, cada uno primera componente 1.
@@ -665,7 +677,6 @@ def logistic_sgd(x, y, lr, eps, batch_size):
          - lr: valor del learning rate.
          - eps: tolerancia para el criterio de parada."""
 
-    n = len(x)
     d = len(x[0])
     w = np.zeros(d)  # Punto inicial
     it = 0
@@ -676,60 +687,148 @@ def logistic_sgd(x, y, lr, eps, batch_size):
 
         # Barajamos los índices y actualizamos los pesos
         x, y = shuffle(x, y, random_state=seed)
+        
         for i in range(0, len(x), batch_size):
             
             x_batch_i, y_batch_i = get_batches(x,y,i, batch_size)
-            
-            idxs = np.arange(n)  # Vector de índices
-            
-            for idx in idxs:
-                w -= lr * derr(x[idx], y[idx], w)
+            w -= lr * derr(x_batch_i, y_batch_i, w)
 
         # Comprobamos condición de parada
         converged = np.linalg.norm(w_old - w) < eps
         it += 1
         
     error = err(x,y,w)
-        
-    return w, it,error
+    class_error = get_classification_error(w, x, y)
+    
+    if verbose == 1:
+        print (" -w inicial: ", w_old)
+        print(" -w final: ", w, "\n", "-Iteración final: ", it, "\n -Error Ein: ", error, "\n -Error de clasificación: ", class_error)
+
+    return w, it, error,  class_error
 
 def f(x, y, a, b):
 	return signo(y - a*x - b)
 
 #%%
 
-w = [0,0,0]
 intervalo = [0,2]
+a,b = simula_recta(intervalo)
+
+# Seleccionamos 100 puntos aleatorios Xn de X.
 x = simula_unif(100, 2, intervalo)
 x1 = x[:,0]
 x2 = x[:,1]
-a,b = simula_recta(intervalo)
+# Evaluamos las respuestas yn de todos ellos respecto a la frontera elegida.
 y = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
-
-w, it, Ein = logistic_sgd(add_bias(x), y, 0.01, 0.01, 16)
-
-print(w, it,Ein)
-
+# Ejecutamos RL para encontrar g
+w, it, Ein, class_error = logistic_sgd(add_bias(x), y, 1, 0.01, 32, verbose = 1)
+# Dibujamos la recta original, la que etiqueta esos puntos.
+recta_x = np.linspace(-50,50,100)
+recta_y = a*recta_x+b
+plt.plot(recta_x, recta_y, '--b', label='Recta etiquetado')
+plt.legend(loc='upper right')
 plot_recta(x,y,intervalo,w)
+
+
+
+#%%
+# Se prueba con Eout 1 sola vez. 
+
+# Seleccionamos 100 puntos aleatorios Xn de X.
+x_test = simula_unif(1000, 2, intervalo)
+x1 = x_test[:,0]
+x2 = x_test[:,1]
+# Evaluamos las respuestas yn de todos ellos respecto a la frontera elegida.
+y_test = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
+
+Eout = err(add_bias(x_test), y_test, w)
+print (" -Eout: ", Eout)
+print (" -Error de clasificación con el conjunto test: ", get_classification_error(w, add_bias(x_test), y_test))
+
+recta_x = np.linspace(-50,50,100)
+recta_y = a*recta_x+b
+plt.plot(recta_x, recta_y, '--b', label='Recta etiquetado')
+plt.legend(loc='upper right')
+
+plot_recta(x_test,y_test,intervalo,w)
 
 #%%
 
+Eout_promedio = []
+Ein_promedio = []
+iteraciones_promedio = []
+class_error_train_promedio = []
+class_error_test_promedio = []
 
-#CODIGO DEL ESTUDIANTE
+for i in range (0, 100):
+    # Seleccionamos 100 puntos aleatorios Xn de X.
+    x = simula_unif(100, 2, intervalo)
+    x1 = x[:,0]
+    x2 = x[:,1]
+    # Evaluamos las respuestas yn de todos ellos respecto a la frontera elegida.
+    y = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
+    # Ejecutamos RL para encontrar g
+    w, it, Ein, class_error = logistic_sgd(add_bias(x), y, 1, 0.01, 32)
+    iteraciones_promedio.append(it)
+    Ein_promedio.append(ein)
+    class_error_train_promedio.append(class_error)
+    # Evaluamos el error Eout usando pra ello una nueva muestra de datos (>999)
+    x_test = simula_unif(1000, 2, intervalo)
+    x1 = x_test[:,0]
+    x2 = x_test[:,1]
+    # Evaluamos las respuestas yn de todos ellos respecto a la frontera elegida.
+    y_test = np.array([f(x1,x2,a,b) for x1, x2 in zip(x1,x2)])
+    Eout = err(add_bias(x_test), y_test, w)
+    Eout_promedio.append(Eout)
+    class_error_test_promedio.append(get_classification_error(w, add_bias(x_test), y_test))
 
-input("\n--- Pulsar tecla para continuar ---\n")
-    
 
+Eout_promedio = np.mean(Eout_promedio)
+Ein_promedio = np.mean(Ein_promedio)
+iteraciones_promedio = np.mean(iteraciones_promedio)
+class_error_train_promedio = np.mean(class_error_train_promedio)
+class_error_test_promedio = np.mean(class_error_test_promedio)
+
+print("Fin del experimento con 100 ejecuciones. Métricas:")
+print("Iteraciones promedio: ", iteraciones_promedio)
+print("Error Ein de entrenamiento promedio: ", Ein_promedio)
+print("Error de clasificación de entrenamiento promedio: ", class_error_train_promedio)
+print("Error Eout de test promedio: ", Eout_promedio)
+print("Error de clasificación de test promedio: ", class_error_test_promedio)
+
+#%%
 
 # Usar la muestra de datos etiquetada para encontrar nuestra solución g y estimar Eout
 # usando para ello un número suficientemente grande de nuevas muestras (>999).
 
+def pseudoinverse(X,Y):
+    
+    U,D,V_traspose = np.linalg.svd(X, full_matrices=False)
+    D = np.diag(D)
+    V = np.transpose(V_traspose)
+    
+    A = np.dot(V,np.linalg.inv(D))
+    A = np.dot(A, np.transpose(U))
+    
+    w = np.dot(A, Y)
+    
+    return w
+
+def Ecm(x,y,w):
+    
+    w_t = np.transpose(w)
+    
+    predictions = np.array([np.dot(w_t, x_n) for x_n in x])
+    
+    error = predictions - y
+    
+    error_cuadratico = error * error 
+    
+    ecm = np.mean(error_cuadratico)
+    
+    return ecm
 
 #CODIGO DEL ESTUDIANTE
-
-
-input("\n--- Pulsar tecla para continuar ---\n")
-
 
 ###############################################################################
 ###############################################################################
@@ -758,11 +857,41 @@ def readData(file_x, file_y, digits, labels):
 	
 	return x, y
 
+def plot_ajuste(w):
+    
+    #mostramos los datos
+    fig, ax = plt.subplots()
+    ax.plot(np.squeeze(x[np.where(y == -1),1]), np.squeeze(x[np.where(y == -1),2]), 'o', color='red', label='4')
+    ax.plot(np.squeeze(x[np.where(y == 1),1]), np.squeeze(x[np.where(y == 1),2]), 'o', color='blue', label='8')
+    ax.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TRAINING) \n. Error de clasificación (tanto por uno): ' + str(get_classification_error(w, x, y)))
+    x1_recta = hiperplano(w, intervalo[0])
+    x2_recta = hiperplano(w, intervalo[1])
+    recta = ([x1_recta, x2_recta])
+    plt.plot(intervalo, recta, '-k', label='Pseudoinversa')
+    ax.set_ylim((-8, 0))
+    ax.set_xlim((0, 0.6))
+    plt.legend()
+    plt.show()
+    
+    fig, ax = plt.subplots()
+    ax.plot(np.squeeze(x_test[np.where(y_test == -1),1]), np.squeeze(x_test[np.where(y_test == -1),2]), 'o', color='red', label='4')
+    ax.plot(np.squeeze(x_test[np.where(y_test == 1),1]), np.squeeze(x_test[np.where(y_test == 1),2]), 'o', color='blue', label='8')
+    ax.set(xlabel='Intensidad promedio', ylabel='Simetria', title='Digitos Manuscritos (TEST) \n. Error de clasificación (tanto por uno): ' + str(get_classification_error(w, x_test, y_test)))
+    x1_recta = hiperplano(w, intervalo[0])
+    x2_recta = hiperplano(w, intervalo[1])
+    recta = ([x1_recta, x2_recta])
+    plt.plot(intervalo, recta, '-k', label='Pseudoinversa')
+    ax.set_ylim((-8, 0))
+    ax.set_xlim((0, 0.6))
+    plt.legend()
+    plt.show()
+    
+    
+#%%
 # Lectura de los datos de entrenamiento
 x, y = readData('datos/X_train.npy', 'datos/y_train.npy', [4,8], [-1,1])
 # Lectura de los datos para el test
 x_test, y_test = readData('datos/X_test.npy', 'datos/y_test.npy', [4,8], [-1,1])
-
 
 #mostramos los datos
 fig, ax = plt.subplots()
@@ -781,25 +910,55 @@ ax.set_xlim((0, 1))
 plt.legend()
 plt.show()
 
-input("\n--- Pulsar tecla para continuar ---\n")
+#%%
 
 #LINEAR REGRESSION FOR CLASSIFICATION 
 
-#CODIGO DEL ESTUDIANTE
+w = pseudoinverse(x,y)
 
+plot_ajuste(w)
 
-input("\n--- Pulsar tecla para continuar ---\n")
+print("Ein: (error cuadrático medio): ", Ecm(x,y,w))
+print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
+print("Ein: (error cuadrático medio): ", Ecm(x_test,y_test,w))
+print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
 
+#%%
 
+# PLA BÁSICO
+w, it, evol, acc, ein = ajusta_PLA(x, y, 100, [0.,0.,0.])
 
+plot_ajuste(w)
+
+print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
+print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
+
+#%%
 #POCKET ALGORITHM
+
+# PLA BÁSICO
+w, evol, ein = pla_pocket(x, y, 10, [0.,0.,0.])
+
+plot_ajuste(w)
+
+print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
+print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
+
+#%%
+
+w, it, Ein, class_error = logistic_sgd(x, y, 1, 0.01, 32)
+
+plot_ajuste(w)
+
+print("Ein: (error cross-entropy): ", err(x,y,w))
+print("Error de clasificación (tanto por uno) en TRAIN: ", get_classification_error(w,x,y))
+print("Etest: (error cross-entropy): ", err(x_test,y_test,w))
+print("Error de clasificación (tanto por uno) en TEST: ", get_classification_error(w,x_test,y_test))
+
+#%%
   
-#CODIGO DEL ESTUDIANTE
 
 
-
-
-input("\n--- Pulsar tecla para continuar ---\n")
 
 
 #COTA SOBRE EL ERROR
